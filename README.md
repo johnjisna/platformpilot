@@ -27,33 +27,4 @@ Instead of asking developers to work directly with Kubernetes manifests and `kub
 
 ## Architecture
 
-
-                 Developer
-                     |
-                     v
-          +---------------------+
-          |   PlatformPilot UI  |
-          |   HTML / CSS / JS   |
-          +----------+----------+
-                     |
-                     v
-          +---------------------+
-          |     Go REST API     |
-          +----------+----------+
-                     |
-                     v
-          +---------------------+
-          |   Kubernetes API    |
-          |     client-go       |
-          +----------+----------+
-                     |
-          +----------+----------+
-          |                     |
-          v                     v
-    Deployments             Services
-          |
-          v
-         Pods
-
-
-
+![PlatformPilot Architecture](docs/images/architecture diagram.png)
