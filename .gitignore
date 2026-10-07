@@ -2,3 +2,5 @@ bin/
 .env
 *.log
 .DS_Store
+go.mod
+go.sum

@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PlatformPilot</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+
+<header class="topbar">
+    <div>
+        <h1>PlatformPilot</h1>
+        <p>Self-service Kubernetes platform</p>
+    </div>
+
+    <div class="cluster-status">
+        <span class="status-dot"></span>
+        Kubernetes Connected
+    </div>
+</header>
+
+<main class="container">
+
+    <section class="hero">
+        <div>
+            <h2>Applications</h2>
+            <p>Deploy and manage applications without using kubectl.</p>
+        </div>
+
+        <button class="primary-button" onclick="openDeployModal()">
+            + Deploy Application
+        </button>
+    </section>
+
+    <section class="stats">
+        <div class="stat-card">
+            <span>Applications</span>
+            <strong id="applicationCount">0</strong>
+        </div>
+
+        <div class="stat-card">
+            <span>Running</span>
+            <strong id="runningCount">0</strong>
+        </div>
+
+        <div class="stat-card">
+            <span>Cluster</span>
+            <strong class="healthy">Healthy</strong>
+        </div>
+    </section>
+
+    <section class="card">
+        <div class="card-header">
+            <h3>Applications</h3>
+            <button class="secondary-button" onclick="loadApplications()">
+                Refresh
+            </button>
+        </div>
+
+        <div class="table-wrapper">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Status</th>
+                        <th>Replicas</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+
+                <tbody id="applicationsTable">
+                    <tr>
+                        <td colspan="5" class="empty">
+                            Loading applications...
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+</main>
+
+<!-- Deploy Modal -->
+
+<div id="deployModal" class="modal hidden">
+    <div class="modal-content">
+
+        <div class="modal-header">
+            <div>
+                <h2>Deploy Application</h2>
+                <p>Create a Kubernetes workload through PlatformPilot.</p>
+            </div>
+
+            <button class="close-button" onclick="closeDeployModal()">×</button>
+        </div>
+
+        <form id="deployForm">
+
+            <label>
+                Application Name
+                <input
+                    id="appName"
+                    type="text"
+                    placeholder="e.g. nginx"
+                    required
+                >
+            </label>
+
+            <label>
+                Resource Type
+
+                <select id="resourceType">
+                    <option value="deployment">Deployment</option>
+                    <option value="pod">Pod</option>
+                    <option value="service">Service</option>
+                </select>
+            </label>
+
+            <div id="recommendation" class="recommendation">
+                <strong>💡 Recommended</strong>
+
+                <p>
+                    Deployment is recommended for most long-running
+                    applications.
+                </p>
+
+                <ul>
+                    <li>Self-healing</li>
+                    <li>Replica management</li>
+                    <li>Rolling updates</li>
+                    <li>Easy scaling</li>
+                </ul>
+            </div>
+
+            <label>
+                Container Image
+                <input
+                    id="image"
+                    type="text"
+                    value="nginx:1.27"
+                    placeholder="e.g. nginx:1.27"
+                    required
+                >
+            </label>
+
+            <label>
+                Replicas
+                <input
+                    id="replicas"
+                    type="number"
+                    value="2"
+                    min="1"
+                    max="20"
+                    required
+                >
+            </label>
+
+            <div id="deployError" class="error hidden"></div>
+
+            <button class="primary-button full-width" type="submit">
+                Deploy Application
+            </button>
+
+        </form>
+
+    </div>
+</div>
+
+<script src="/static/app.js"></script>
+
+</body>
+</html>
