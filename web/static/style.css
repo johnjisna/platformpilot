@@ -260,3 +260,9 @@ select {
     font-size: 12px;
     font-weight: 600;
 }
+
+.protected {
+    color: #64748b;
+    font-size: 12px;
+    font-weight: 600;
+}

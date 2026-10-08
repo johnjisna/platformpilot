@@ -50,6 +50,16 @@ async function loadApplications() {
                     `${resource.available}/${resource.replicas}`;
             }
 
+            const protectedResource =
+                (
+                    resource.type === "Pod" &&
+                    resource.name.startsWith("platformpilot-")
+                ) ||
+                (
+                    resource.type === "Service" &&
+                    resource.name === "platformpilot"
+                );
+
             return `
                 <tr>
                     <td>
@@ -67,26 +77,34 @@ async function loadApplications() {
                     <td>${replicaText}</td>
 
                     <td>
-    			${
-        			(
-           		 resource.type === "Pod" &&
-           		 resource.name.startsWith("platformpilot-")
-       			 ) ||
-       			 (
-           		 resource.type === "Service" &&
-           		 resource.name === "platformpilot"
-       			 )
-           		 ? "-"
-           		 : `<button
-               		 class="delete-button"
-               		 onclick="deleteResource('${resource.type}', '${resource.name}')">
-              		 Delete
-           		 </button>`
-   			 }
-		  </td>
+                        ${
+                            protectedResource
+                                ? `<span class="protected">Protected</span>`
+                                : `<button
+                                    class="delete-button resource-delete"
+                                    data-type="${resource.type}"
+                                    data-name="${resource.name}">
+                                    Delete
+                                   </button>`
+                        }
+                    </td>
                 </tr>
             `;
         }).join("");
+
+        // Attach delete handlers after rendering
+        document
+            .querySelectorAll(".resource-delete")
+            .forEach(button => {
+
+                button.addEventListener("click", () => {
+
+                    const type = button.dataset.type;
+                    const name = button.dataset.name;
+
+                    deleteResource(type, name);
+                });
+            });
 
     } catch (error) {
 
@@ -100,11 +118,10 @@ async function loadApplications() {
     }
 }
 
-
-async function deleteApplication(name) {
+async function deleteResource(type, name) {
 
     const confirmed = confirm(
-        `Delete application "${name}"?`
+        `Delete ${type} "${name}"?`
     );
 
     if (!confirmed) {
@@ -114,16 +131,14 @@ async function deleteApplication(name) {
     try {
 
         const response = await fetch(
-            `/api/v1/applications/${name}`,
+            `/api/v1/resources/${type}/${encodeURIComponent(name)}`,
             {
                 method: "DELETE"
             }
         );
 
         if (!response.ok) {
-            throw new Error(
-                await response.text()
-            );
+            throw new Error(await response.text());
         }
 
         await loadApplications();
@@ -131,145 +146,7 @@ async function deleteApplication(name) {
     } catch (error) {
 
         alert(
-            `Failed to delete ${name}: ${error.message}`
+            `Failed to delete ${type} ${name}: ${error.message}`
         );
     }
 }
-
-
-function openDeployModal() {
-    document
-        .getElementById("deployModal")
-        .classList.remove("hidden");
-}
-
-
-function closeDeployModal() {
-    document
-        .getElementById("deployModal")
-        .classList.add("hidden");
-}
-
-
-document
-    .getElementById("resourceType")
-    .addEventListener("change", function () {
-
-        const recommendation =
-            document.getElementById("recommendation");
-
-        if (this.value === "pod") {
-
-            recommendation.innerHTML = `
-                <strong>⚠️ Recommendation: Deployment</strong>
-
-                <p>
-                    A standalone Pod is usually not recommended
-                    for long-running applications.
-                </p>
-
-                <ul>
-                    <li>Pods are not automatically recreated.</li>
-                    <li>No replica management.</li>
-                    <li>No rolling updates.</li>
-                </ul>
-
-                <p>
-                    Consider using a Deployment instead.
-                </p>
-            `;
-
-        } else if (this.value === "service") {
-
-            recommendation.innerHTML = `
-                <strong>💡 Service</strong>
-
-                <p>
-                    A Service provides a stable network endpoint
-                    for your Kubernetes application.
-                </p>
-            `;
-
-        } else {
-
-            recommendation.innerHTML = `
-                <strong>💡 Recommended</strong>
-
-                <p>
-                    Deployment is recommended for most
-                    long-running applications.
-                </p>
-
-                <ul>
-                    <li>Self-healing</li>
-                    <li>Replica management</li>
-                    <li>Rolling updates</li>
-                    <li>Easy scaling</li>
-                </ul>
-            `;
-        }
-    });
-
-
-document
-    .getElementById("deployForm")
-    .addEventListener("submit", async function (event) {
-
-        event.preventDefault();
-
-        const errorBox =
-            document.getElementById("deployError");
-
-        errorBox.classList.add("hidden");
-
-        const payload = {
-            name: document.getElementById("appName").value,
-            image: document.getElementById("image").value,
-            replicas: Number(
-                document.getElementById("replicas").value
-            )
-        };
-
-        try {
-
-            const response = await fetch(
-                "/api/v1/applications",
-                {
-                    method: "POST",
-
-                    headers: {
-                        "Content-Type": "application/json"
-                    },
-
-                    body: JSON.stringify(payload)
-                }
-            );
-
-            if (!response.ok) {
-                throw new Error(
-                    await response.text()
-                );
-            }
-
-            closeDeployModal();
-
-            document
-                .getElementById("deployForm")
-                .reset();
-
-            document.getElementById("replicas").value = 2;
-            document.getElementById("image").value = "nginx:1.27";
-
-            await loadApplications();
-
-        } catch (error) {
-
-            errorBox.textContent = error.message;
-
-            errorBox.classList.remove("hidden");
-        }
-    });
-
-
-loadApplications();
-
