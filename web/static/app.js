@@ -92,13 +92,11 @@ async function loadApplications() {
             `;
         }).join("");
 
-        // Attach delete handlers after rendering
         document
             .querySelectorAll(".resource-delete")
             .forEach(button => {
 
                 button.addEventListener("click", () => {
-
                     const type = button.dataset.type;
                     const name = button.dataset.name;
 
@@ -117,6 +115,7 @@ async function loadApplications() {
         `;
     }
 }
+
 
 async function deleteResource(type, name) {
 
@@ -150,3 +149,132 @@ async function deleteResource(type, name) {
         );
     }
 }
+
+
+function openDeployModal() {
+    const modal = document.getElementById("deployModal");
+
+    if (modal) {
+        modal.classList.remove("hidden");
+    }
+}
+
+
+function closeDeployModal() {
+    const modal = document.getElementById("deployModal");
+
+    if (modal) {
+        modal.classList.add("hidden");
+    }
+}
+
+
+async function deployApplication(event) {
+
+    event.preventDefault();
+
+    const form = event.target;
+
+    const name = document.getElementById("appName").value.trim();
+    const image = document.getElementById("image").value.trim();
+    const replicas = Number(
+    document.getElementById("replicas").value
+    );
+
+    if (!name || !image || !replicas) {
+        return;
+    }
+
+    const errorElement = document.getElementById("deployError");
+
+    if (errorElement) {
+        errorElement.classList.add("hidden");
+        errorElement.textContent = "";
+    }
+
+    try {
+
+        const response = await fetch(
+            "/api/v1/applications",
+            {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    name: name,
+                    image: image,
+                    replicas: replicas
+                })
+            }
+        );
+
+        if (!response.ok) {
+            throw new Error(await response.text());
+        }
+
+        form.reset();
+
+        closeDeployModal();
+
+        await loadApplications();
+
+    } catch (error) {
+
+        if (errorElement) {
+            errorElement.textContent = error.message;
+            errorElement.classList.remove("hidden");
+        } else {
+            alert(`Failed to deploy application: ${error.message}`);
+        }
+    }
+}
+
+
+function updateRecommendation() {
+
+    const resourceType =
+        document.getElementById("resourceType");
+
+    const recommendation =
+        document.getElementById("recommendation");
+
+    if (!resourceType || !recommendation) {
+        return;
+    }
+
+    if (resourceType.value === "Pod") {
+
+        recommendation.classList.remove("hidden");
+
+    } else {
+
+        recommendation.classList.add("hidden");
+    }
+}
+
+
+document.addEventListener("DOMContentLoaded", () => {
+
+    const deployForm =
+        document.getElementById("deployForm");
+
+    if (deployForm) {
+        deployForm.addEventListener(
+            "submit",
+            deployApplication
+        );
+    }
+
+    const resourceType =
+        document.getElementById("resourceType");
+
+    if (resourceType) {
+        resourceType.addEventListener(
+            "change",
+            updateRecommendation
+        );
+    }
+
+    loadApplications();
+});
